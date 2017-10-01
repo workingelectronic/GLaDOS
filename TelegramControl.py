@@ -22,7 +22,7 @@ print(Tok)
 bot = telebot.TeleBot(Tok)
 
 # Los que pueden usar el bot
-admin = [191437870]
+admin = []
 
 # Su contraseña
 PASSWORD = "ABC"
