@@ -19,7 +19,7 @@ from os import system
 #file = open("Token.txt", "r")
 #Tok = file.read()
 #print(Tok)
-bot = telebot.TeleBot("432659988:AAENQk-ecCFswijJ7IedQ65_B6GwV85APBM")
+bot = telebot.TeleBot("")
 
 # Los que pueden usar el bot
 admin = []
