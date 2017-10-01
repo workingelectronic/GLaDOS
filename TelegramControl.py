@@ -1,4 +1,4 @@
-'''
+"""
 Domotic sytem base on IOT and Telegram control
 Designed by
     Javier García Blanco
@@ -6,7 +6,7 @@ Designed by
 Location
     El taller, Santander
 
-'''
+"""
 
 import time
 import telebot
@@ -16,13 +16,13 @@ from os import system
 
 
 # Token del bot
-#file = open("Token.txt", "r")
-#Tok = file.read()
-#print(Tok)
-bot = telebot.TeleBot("432659988:AAENQk-ecCFswijJ7IedQ65_B6GwV85APBM")
+file = open("Token.txt", "r")
+Tok = file.readline(45)
+print(Tok)
+bot = telebot.TeleBot(Tok)
 
 # Los que pueden usar el bot
-admin = []
+admin = [191437870]
 
 # Su contraseña
 PASSWORD = "ABC"
@@ -31,9 +31,11 @@ PASSWORD = "ABC"
 Comienza el programa,sistema de autorización
 """
 
+
 # Extracts the unique_code from the sent /start command.
 def extract_unique_code(text):
     return text.split()[1] if len(text.split()) > 1 else None
+
 
 # if unique_code = ABC: # if the '/start' command contains a unique_code
 @bot.message_handler(commands=['start'])
@@ -46,9 +48,8 @@ def command_start(message):
         bot.send_message(message.chat.id, text="Bienvenido amo, estoy a su servicio.")
         bot.send_chat_action(cid, 'typing')  # show the bot "typing" (max. 5 secs)
         time.sleep(1)
-        bot.send_message(message.chat.id,
-                          """Para conocer las opciones disponibles dentro del sistema, por favor escriba *Ayuda*""",
-                         parse_mode="Markdown")
+        bot.send_message(message.chat.id, "Para conocer las opciones disponibles dentro del sistema, por favor escriba "
+                                          "*Ayuda*", parse_mode="Markdown")
         return
 
     else:
@@ -70,6 +71,8 @@ def command_help(message):
 ---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
 """
+
+
 @bot.message_handler(regexp="Ayuda")
 def comando_ayuda(message):
     cid = message.chat.id
@@ -88,6 +91,7 @@ def comando_ayuda(message):
     else:
         bot.send_message(cid, u"""No estas autorizado, contacta con mi amo.""")
 
+
 @bot.message_handler(regexp=u"[Cc]omando[!\?]*")
 def command_long_text(message):
     cid = message.chat.id
@@ -101,43 +105,46 @@ def command_long_text(message):
 
         bot.send_message(cid, u"""No estas autorizado, contacta con mi amo.""")
 
+
 @bot.message_handler(regexp="Foto")
 def photo(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
-        subprocess.check_call(["python3","camera.py"])
-        pt= open("/home/pi/Desktop/photo.jpg",'rb')
+        subprocess.check_call(["python3", "camera.py"])
+        pt = open("/home/pi/Desktop/photo.jpg", 'rb')
         bot.send_photo(message.chat.id, pt)
         bot.send_message(message.chat.id, text="Fecha: " + time.strftime("%c"))
-        CleanUp="rm photo*.jpg"
-        system(CleanUp)
+        clean = "rm photo*.jpg"
+        system(clean)
     else:
 
         bot.send_message(cid, text="No estas autorizado, contacta con mi amo.")
+
 
 @bot.message_handler(regexp="Video")
 def video(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
-        subprocess.check_call(["python3","Video.py"])
-        vd= open("/home/pi/Desktop/video.mp4",'rb')
+        subprocess.check_call(["python3", "Video.py"])
+        vd = open("/home/pi/Desktop/video.mp4", 'rb')
         bot.send_video(message.chat.id, vd)
         bot.send_message(message.chat.id, text="Fecha: " + time.strftime("%c"))
-        CleanUp="rm video.mp4 video.h264"
-        system(CleanUp)
+        clean = "rm video.mp4 video.h264"
+        system(clean)
     else:
 
         bot.send_message(cid, text="No estas autorizado, contacta con mi amo.")
         
+
 @bot.message_handler(regexp="Vigilancia")
-def vigilancia(message):
+def vigilance(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
         bot.send_message(cid, text="Activada.")
-        subprocess.check_call(["python3","Movedetector.py"])
+        subprocess.check_call(["python3", "Movedetector.py"])
         bot.send_message(cid, text="Movimiento detectado.")
         photo()
         video()
@@ -154,16 +161,20 @@ scripts a parte no espera a recibir una orden
 ----------------------------------------------------------------------------------------------------------
 """
 
+
 @bot.message_handler(regexp="Luz")
-def comando_ayuda(message):
+def light_button(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
+        fil = open("onoff.txt", "w")
+        fil.write("toggle")
+        fil.close()
         bot.send_message(message.chat.id, """*::Iluminación::*""", parse_mode="Markdown")
         markup = telebot.types.ReplyKeyboardMarkup()
         itembtna = telebot.types.KeyboardButton('Baño')
         itembtnv = telebot.types.KeyboardButton('Cocina')
-        itembtnc = telebot.types.KeyboardButton('Salon')
+        itembtnc = telebot.types.KeyboardButton('Salón')
         itembtnd = telebot.types.KeyboardButton('Cuarto')
         itembtne = telebot.types.KeyboardButton('Pasillo')
         markup.row(itembtna, itembtnv)
@@ -172,13 +183,49 @@ def comando_ayuda(message):
     else:
         bot.send_message(cid, u"""No estas autorizado, contacta con mi amo.""")
 
-@bot.message_handler(regexp = "Salon")
-@bot.message_handler(regexp = "Baño")
-@bot.message_handler(regexp = "Cocina")
-@bot.message_handler(regexp = "Salon")
-@bot.message_handler(regexp = "Cuarto")
-@bot.message_handler(regexp = "Pasillo")
-def habitacion(message):
+
+@bot.message_handler(regexp="Encender")
+def on(message):
+    cid = message.chat.id
+    second_word = extract_unique_code(message.text)
+    if second_word == "todo":
+        file1 = open("onoff.txt", "w")
+        file1.write("on")
+        file1.close()
+        subprocess.check_call(["python3", "Todo.py"])
+        time.sleep(0.1)
+        bot.send_message(cid, "Todo encendido amo.")
+    else:
+        light_button(message)
+        file1 = open("onoff.txt", "w")
+        file1.write("on")
+        file1.close()
+
+
+@bot.message_handler(regexp="Apagar")
+def on(message):
+    cid = message.chat.id
+    second_word = extract_unique_code(message.text)
+    if second_word == "todo":
+        file2 = open("onoff.txt", "w")
+        file2.write("off")
+        file2.close()
+        subprocess.check_call(["python3", "Todo.py"])
+        time.sleep(0.1)
+        bot.send_message(cid, "Todo apgado amo.")
+    else:
+        light_button(message)
+        file2 = open("onoff.txt", "w")
+        file2.write("off")
+        file2.close()
+
+
+@bot.message_handler(regexp="Salón")
+@bot.message_handler(regexp="Baño")
+@bot.message_handler(regexp="Cocina")
+@bot.message_handler(regexp="Cuarto")
+@bot.message_handler(regexp="Pasillo")
+def rooms(message):
     cid = message.chat.id
     room = message.text
     result = cid in admin
@@ -186,10 +233,10 @@ def habitacion(message):
         print(message.text)
         subprocess.check_call(["python3", room+".py"])
         time.sleep(0.1)
-        file = open("State.txt", "r")
-        answer= file.read()
+        fi = open("State.txt", "r")
+        answer = fi.read()
         bot.send_message(cid, answer)
-        print(file.read())
+        print(fi.read())
     else:
         bot.send_message(cid, u"""No estas autorizado, contacta con mi amo.""")
 
@@ -205,17 +252,18 @@ Conviene ponerlo al final porque he comprobado que ante 2 comandos realiza el pr
 """
 
 
-respuesta = ['Lo siento amo, no volverá a ocurrir','No me golpee amo, seré bueno',
-             'ClipClap será mejor la próxima vez, lo prometo','Robot idiota, no volverá a ocurrir','Lo siento amo']
+respuesta = ['Lo siento amo, no volverá a ocurrir', 'No me golpee amo, seré bueno',
+             'ClipClap será mejor la próxima vez, lo prometo', 'Robot idiota, no volverá a ocurrir', 'Lo siento amo']
 
-@bot.message_handler(regexp = "Idiota")
-@bot.message_handler(regexp = "Inútil")
-@bot.message_handler(regexp = 'Basura')
-@bot.message_handler(regexp = "Puto")
-@bot.message_handler(regexp = "Muerete")
-@bot.message_handler(regexp = "Odio")
-@bot.message_handler(regexp = "Asco")
-def insulto(message):
+
+@bot.message_handler(regexp="Idiota")
+@bot.message_handler(regexp="Inútil")
+@bot.message_handler(regexp='Basura')
+@bot.message_handler(regexp="Puto")
+@bot.message_handler(regexp="Muerete")
+@bot.message_handler(regexp="Odio")
+@bot.message_handler(regexp="Asco")
+def bad_word(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
@@ -224,11 +272,12 @@ def insulto(message):
     else:
         bot.send_message(cid, "No estas autorizado, contacta con mi amo.")
 
+
 @bot.message_handler(regexp="Mando")
 @bot.message_handler(regexp="Digo")
 @bot.message_handler(regexp="Calla")
 @bot.message_handler(regexp="Ordeno")
-def insulto(message):
+def say_yes_sir(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
@@ -237,8 +286,9 @@ def insulto(message):
     else:
         bot.send_message(cid, "No estas autorizado, contacta con mi amo.")
 
+
 @bot.message_handler(regexp="Bien")
-def insulto(message):
+def good(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
@@ -247,10 +297,11 @@ def insulto(message):
     else:
         bot.send_message(cid, "No estas autorizado, contacta con mi amo.")
 
+
 @bot.message_handler(regexp="eh")
 @bot.message_handler(regexp="tu")
 @bot.message_handler(regexp="Hola")
-def insulto(message):
+def pick_it(message):
     cid = message.chat.id
     result = cid in admin
     if result is True:
@@ -263,6 +314,7 @@ def insulto(message):
 Respuesta ante comando no encontrado
 --------------------------------------------------------------------------------------------------------
 """
+
 
 @bot.message_handler(func=lambda m: True)
 def echo_all(message):
